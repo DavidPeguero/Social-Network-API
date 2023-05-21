@@ -1,11 +1,11 @@
-const { Schema, ObjectId } = require('mongoose');
+const { Schema, ObjectId, default: mongoose } = require('mongoose');
 
 //Reaction Schema 
 const reactionSchema = Schema(
     {
         reactionId : {
             type : Schema.Types.ObjectId,
-            default : new ObjectId();
+            default : new ObjectId()
         },
         reactionBody : {
             type : String,
