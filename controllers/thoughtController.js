@@ -1,4 +1,6 @@
-const {  Thought } = require('../models');
+const { ObjectId } = require('mongoose')
+const {  Thought, User, Reaction } = require('../models');
+
 
 module.exports = {
   // Get all thoughts
@@ -28,8 +30,28 @@ module.exports = {
   // Create a thought
   async createThought(req, res) {
     try {
+      //Find the user
+      const userExists = await User.findOne({_id : req.body.userId})
+      
+      //If the user exist return an error
+      if(!userExists){
+        res.status(400).json(user)
+        return;
+      }
+
+      //Otherwise create the thought and add it to the users array of thought
       const thought = await Thought.create(req.body);
-      res.json(thought);
+      
+      const user = await User.findOneAndUpdate({
+        _id : req.body.userId
+      },
+      {
+        $addToSet : {
+          thoughts : thought
+        }
+      })
+      
+      res.json({thought});
     } catch (err) {
       console.log(err);
       return res.status(500).json(err);
@@ -44,8 +66,14 @@ module.exports = {
         return res.status(404).json({ message: 'No thought with that ID' });
       }
 
-      await Thought.deleteMany({ _id: { $in: thought.thoughts } });
-      res.json({ message: 'Thought deleted!' });
+      const users = await User.updateMany({},
+        {
+          $pull : {
+            thoughts : req.params.thoughtId
+          }
+        })
+
+      res.json({ message: 'Thought deleted!' , users });
     } catch (err) {
       res.status(500).json(err);
     }
